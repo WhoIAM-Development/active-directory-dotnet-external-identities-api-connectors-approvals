@@ -52,12 +52,7 @@ namespace CustomApproval.Web.Controllers
             ViewBag.Email = data.Email;
 
             var users = await userService.GetUsersByEmail(data.Email);
-            var groups = new List<GroupsModel>()
-            {
-                new GroupsModel()  {DisplayName = "Group1", Id = "abc" },
-                new GroupsModel()  {DisplayName = "Group2", Id = "def" },
-                new GroupsModel()  {DisplayName = "Group3", Id = "ghi" }
-            };
+            var groups = await this.newGraphService.GetGroups();
 
             var detailsModel = new DetailsModel()
             {
@@ -82,7 +77,9 @@ namespace CustomApproval.Web.Controllers
 
             if (user.IsSocialUser())
             {
-                await newGraphService.CreateUser(user.SdkToSocialUserInput(graphSettings.Tenant));
+                var createUserObj = user.SdkToSocialUserInput(graphSettings.Tenant);
+                var createdUser = await newGraphService.CreateUser(createUserObj);
+                await newGraphService.AddUserToGroups(createdUser.Id, SelectedGroups);
 
                 await mailService.SendApprovalNotification(user.Email, user.Locale);
             }
@@ -95,7 +92,9 @@ namespace CustomApproval.Web.Controllers
                     return View("Index");
                 }
 
-                await newGraphService.UpdateUser(result.invitedUser.id, user.SdkToSocialUserInput(graphSettings.Tenant));
+                var updateUserObj = user.SdkToUpdateGuestUserInput();
+                await newGraphService.UpdateUser(result.invitedUser.id, updateUserObj);
+                await newGraphService.AddUserToGroups(result.invitedUser.id, SelectedGroups);
             }
 
             await userService.RemoveUsersById(Id);

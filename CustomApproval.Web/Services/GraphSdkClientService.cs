@@ -25,9 +25,9 @@ namespace CustomApproval.Web.Services
             this.graphClient = this.CreateGraphClient(graphSettings);
         }
 
-        public async Task CreateUser(User user)
+        public async Task<User> CreateUser(User user)
         {
-            await this.graphClient.Users.Request().AddAsync(user);
+            return await this.graphClient.Users.Request().AddAsync(user);
         }
 
         public async Task<InviteGuestUserOutputModel> InviteGuestUser(string emailAddress)
@@ -38,7 +38,6 @@ namespace CustomApproval.Web.Services
                 InviteRedirectUrl = this.appSettings.ParentAppRedirectUrl,
                 SendInvitationMessage = true
             };
-
             var inviteResponse = await this.graphClient.Invitations
                 .Request()
                 .AddAsync(invitation);
@@ -50,6 +49,41 @@ namespace CustomApproval.Web.Services
                     id = inviteResponse.InvitedUser.Id
                 }
             };
+        }
+
+        public async Task<IEnumerable<GroupsModel>> GetGroups()
+        {
+            var groupsApiResponse = await this.graphClient.Groups
+                .Request()
+                .GetAsync();
+            var groupsList = new List<GroupsModel>();
+            var pageIterator = PageIterator<Group>
+                .CreatePageIterator(graphClient, groupsApiResponse, (g) => {
+                    groupsList.Add(new GroupsModel()
+                    {
+                        DisplayName = g.DisplayName,
+                        Id = g.Id
+                    });
+                    return true;
+                });
+            await pageIterator.IterateAsync();
+
+            return groupsList;
+        }
+
+        public async Task AddUserToGroups(string id, IEnumerable<string> groups)
+        {
+            var directoryObject = new DirectoryObject
+            {
+                Id = id
+            };
+
+            foreach (string groupId in groups)
+            {
+                await this.graphClient.Groups[groupId].Members.References
+                    .Request()
+                    .AddAsync(directoryObject);
+            }
         }
 
         public async Task UpdateUser(string targetId, User newUser)
