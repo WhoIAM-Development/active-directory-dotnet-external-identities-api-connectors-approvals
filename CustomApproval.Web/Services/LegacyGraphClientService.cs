@@ -38,11 +38,6 @@ namespace CustomApproval.Web.Services
             await SendGraphRequest($"/groups/{groupId}/members/$ref", JsonConvert.SerializeObject(userId), HttpMethod.Post);
         }
 
-        //public async Task<List<string>> GetAllGroups()
-        //{
-        //    await SendGraphRequest("/groups",)
-        //}
-
         public async Task UpdateUser(Dictionary<string, object> user, string id)
         {
             await SendGraphRequest($"/users/{id}", JsonConvert.SerializeObject(user), HttpMethod.Patch);

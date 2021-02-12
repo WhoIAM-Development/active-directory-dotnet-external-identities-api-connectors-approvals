@@ -95,7 +95,7 @@ namespace CustomApproval.Web.Controllers
                     return View("Index");
                 }
 
-                await newGraphService.CreateUser(user.SdkToUpdateGuestUserInput());
+                await newGraphService.UpdateUser(result.invitedUser.id, user.SdkToSocialUserInput(graphSettings.Tenant));
             }
 
             await userService.RemoveUsersById(Id);

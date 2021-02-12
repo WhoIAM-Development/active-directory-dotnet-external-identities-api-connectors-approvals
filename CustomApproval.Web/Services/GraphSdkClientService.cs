@@ -35,7 +35,8 @@ namespace CustomApproval.Web.Services
             var invitation = new Invitation()
             {
                 InvitedUserEmailAddress = emailAddress,
-                InviteRedirectUrl = this.appSettings.ParentAppRedirectUrl
+                InviteRedirectUrl = this.appSettings.ParentAppRedirectUrl,
+                SendInvitationMessage = true
             };
 
             var inviteResponse = await this.graphClient.Invitations
@@ -46,7 +47,7 @@ namespace CustomApproval.Web.Services
             {
                 invitedUser = new InvitedUser()
                 {
-                    id = inviteResponse.Id
+                    id = inviteResponse.InvitedUser.Id
                 }
             };
         }
