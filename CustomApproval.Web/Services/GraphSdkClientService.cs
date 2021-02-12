@@ -20,21 +20,9 @@ namespace CustomApproval.Web.Services
 
         public GraphSdkClientService(IConfiguration config)
         {
-            this.graphSettings = config.GetSection("GraphApi")
-              .Get<GraphSettings>();
-
-            this.appSettings = config.GetSection("AppSettings")
-              .Get<AppSettings>();
-
-            var app = ConfidentialClientApplicationBuilder
-                      .Create(graphSettings.ClientId)
-                      .WithClientSecret(graphSettings.ClientSecret)
-                      .WithAuthority(new Uri(graphSettings.Authority))
-                      .Build();
-
-            ClientCredentialProvider authProvider = new ClientCredentialProvider(app);
-
-            this.graphClient = new GraphServiceClient(authProvider);
+            this.graphSettings = config.GetSection("GraphApi").Get<GraphSettings>();
+            this.appSettings = config.GetSection("AppSettings").Get<AppSettings>();
+            this.graphClient = this.CreateGraphClient(graphSettings);
         }
 
         public async Task CreateUser(User user)
@@ -42,23 +30,11 @@ namespace CustomApproval.Web.Services
             await this.graphClient.Users.Request().AddAsync(user);
         }
 
-        public async Task<InviteGuestUserOutputModel> InviteGuestUser(User user)
+        public async Task<InviteGuestUserOutputModel> InviteGuestUser(string emailAddress)
         {
-            string email = string.Empty;
-            try
-            {
-                email = user.Identities.First(oid => oid.SignInType == "email").IssuerAssignedId;
-            }
-            catch (InvalidOperationException ex)
-            {
-                email = user.Mail;
-            }
-
-
             var invitation = new Invitation()
             {
-                InvitedUser = user,
-                InvitedUserEmailAddress = email,
+                InvitedUserEmailAddress = emailAddress,
                 InviteRedirectUrl = this.appSettings.ParentAppRedirectUrl
             };
 
@@ -80,6 +56,19 @@ namespace CustomApproval.Web.Services
             var user = await this.graphClient.Users[targetId]
                 .Request()
                 .UpdateAsync(newUser);
+        }
+
+        private GraphServiceClient CreateGraphClient(GraphSettings graphSettings)
+        {
+            var app = ConfidentialClientApplicationBuilder
+                      .Create(graphSettings.ClientId)
+                      .WithClientSecret(graphSettings.ClientSecret)
+                      .WithAuthority(new Uri(graphSettings.Authority))
+                      .Build();
+
+            ClientCredentialProvider authProvider = new ClientCredentialProvider(app);
+
+            return new GraphServiceClient(authProvider);
         }
     }
 }

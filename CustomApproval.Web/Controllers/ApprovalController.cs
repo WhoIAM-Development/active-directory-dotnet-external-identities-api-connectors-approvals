@@ -18,16 +18,21 @@ namespace CustomApproval.Web.Controllers
     {
 
         private readonly IUserService userService;
-        private readonly IGraphService graphClientService;
+        private readonly IGraphSdkClientService newGraphService;
         private readonly IMailService mailService;
         private readonly GraphSettings graphSettings;
         private readonly AppSettings appSettings;
 
-        public ApprovalController(IConfiguration config, IUserService userService, IGraphService graphClientService, IMailService mailService)
+        public ApprovalController(
+            IConfiguration config,
+            IUserService userService,
+            IGraphSdkClientService newGraphService,
+            IMailService mailService)
         {
             this.userService = userService;
-            this.graphClientService = graphClientService;
+            this.newGraphService = newGraphService;
             this.mailService = mailService;
+
             graphSettings = config.GetSection("GraphApi")
               .Get<GraphSettings>();
             appSettings = config.GetSection("AppSettings")
@@ -77,19 +82,20 @@ namespace CustomApproval.Web.Controllers
 
             if (user.IsSocialUser())
             {
-                await graphClientService.CreateUser(user.ToSocialUserInput(graphSettings.Tenant));
+                await newGraphService.CreateUser(user.SdkToSocialUserInput(graphSettings.Tenant));
+
                 await mailService.SendApprovalNotification(user.Email, user.Locale);
             }
             else 
             {
-                var result = await graphClientService.InviteGuestUser(user.ToInviteGuestUserInput(appSettings.ParentAppRedirectUrl));
+                var result = await newGraphService.InviteGuestUser(user.Email);
 
                 if (result == null || string.IsNullOrEmpty(result.invitedUser?.id))
                 {
                     return View("Index");
                 }
 
-                await graphClientService.UpdateUser(user.ToUpdateGuestUserInput(), result.invitedUser.id);
+                await newGraphService.CreateUser(user.SdkToUpdateGuestUserInput());
             }
 
             await userService.RemoveUsersById(Id);

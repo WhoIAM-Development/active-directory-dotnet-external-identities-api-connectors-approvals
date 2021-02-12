@@ -1,6 +1,7 @@
 ﻿using CustomApproval.Web.Entities;
 using CustomApproval.Web.Models;
 using CustomApproval.Web.Models.GraphApi;
+using Microsoft.Graph;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -62,54 +63,102 @@ namespace CustomApproval.Web.Extensions
             return !string.IsNullOrEmpty(identityProvider);
         }
 
-        public static Dictionary<string, object> ToSocialUserInput(this UserData userData, string tenant)
+        //public static Dictionary<string, object> ToSocialUserInput(this UserData userData, string tenant)
+        //{
+        //    var data = new Dictionary<string, object>();
+        //    data.Add("displayName", userData.DisplayName);
+        //    data.Add("mail", userData.Email);
+        //    data.Add("userPrincipalName", $"{userData.Email.Replace("@", "_")}#EXT@{tenant}");
+        //    data.Add("mailNickname", userData.Email.Split("@")[0]);
+        //    data.Add("accountEnabled", true);
+        //    data.Add("userType", "Guest");
+        //    data.Add("passwordPolicies", "DisablePasswordExpiration");
+
+        //    if (userData.Identities != null && userData.Identities.Any())
+        //    {
+        //        data.Add("identities", userData.Identities.Select(x => new { signInType = x.SignInType, issuer = x.Issuer, issuerAssignedId = x.IssuerAssignedId }).ToArray());
+        //    }
+
+        //    var customAttributes = GetCustomAttributes(userData);
+        //    if (customAttributes.Any())
+        //    {
+        //        data = data.Union(customAttributes).ToDictionary(d => d.Key, d => d.Value);
+        //    }
+
+        //    return data;
+        //}
+
+        public static Microsoft.Graph.User SdkToSocialUserInput(this UserData userData, string tenant)
         {
-            var data = new Dictionary<string, object>();
-            data.Add("displayName", userData.DisplayName);
-            data.Add("mail", userData.Email);
-            data.Add("userPrincipalName", $"{userData.Email.Replace("@", "_")}#EXT@{tenant}");
-            data.Add("mailNickname", userData.Email.Split("@")[0]);
-            data.Add("accountEnabled", true);
-            data.Add("userType", "Guest");
-            data.Add("passwordPolicies", "DisablePasswordExpiration");
+            var user = new User()
+            {
+                DisplayName = userData.DisplayName,
+                Mail = userData.Email,
+                UserPrincipalName = $"{userData.Email.Replace("@", "_")}#EXT@{tenant}",
+                MailNickname = userData.Email.Split("@")[0],
+                AccountEnabled = true,
+                UserType = "Guest",
+                PasswordPolicies = "DisablePasswordExpiration"
+            };
 
             if (userData.Identities != null && userData.Identities.Any())
             {
-                data.Add("identities", userData.Identities.Select(x => new { signInType = x.SignInType, issuer = x.Issuer, issuerAssignedId = x.IssuerAssignedId }).ToArray());
+                IEnumerable<ObjectIdentity> userIdentities = userData.Identities.Select(x =>
+                new ObjectIdentity
+                {
+                    SignInType = x.SignInType,
+                    Issuer = x.Issuer,
+                    IssuerAssignedId = x.IssuerAssignedId
+                });
+
+                user.Identities = userIdentities;
             }
 
-            var customAttributes = GetCustomAttributes(userData);
-            if (customAttributes.Any())
-            {
-                data = data.Union(customAttributes).ToDictionary(d => d.Key, d => d.Value);
-            }
+            Dictionary<string, object> customAttribtes = GetCustomAttributes(userData);
+            user.AdditionalData = GetCustomAttributes(userData);
 
-            return data;
+            return user;
         }
 
-        public static Dictionary<string, object> ToInviteGuestUserInput(this UserData userData, string redirectUrl)
-        {
-            var data = new Dictionary<string, object>();
-            data.Add("invitedUserEmailAddress", userData.Email);
-            data.Add("inviteRedirectUrl", redirectUrl);
-            data.Add("sendInvitationMessage", true);
-            return data;
-        }
+        //public static Dictionary<string, object> ToInviteGuestUserInput(this UserData userData, string redirectUrl)
+        //{
+        //    var data = new Dictionary<string, object>();
+        //    data.Add("invitedUserEmailAddress", userData.Email);
+        //    data.Add("inviteRedirectUrl", redirectUrl);
+        //    data.Add("sendInvitationMessage", true);
+        //    return data;
+        //}
 
-        public static Dictionary<string, object> ToUpdateGuestUserInput(this UserData userData)
-        {
-            var data = new Dictionary<string, object>();
-            data.Add("displayName", userData.DisplayName);
-            data.Add("givenName", userData.GivenName);
-            data.Add("surname", userData.SurName);
 
-            var customAttributes = GetCustomAttributes(userData);
-            if (customAttributes.Any())
+        //public static Dictionary<string, object> ToUpdateGuestUserInput(this UserData userData)
+        //{
+        //    var data = new Dictionary<string, object>();
+        //    data.Add("displayName", userData.DisplayName);
+        //    data.Add("givenName", userData.GivenName);
+        //    data.Add("surname", userData.SurName);
+
+        //    var customAttributes = GetCustomAttributes(userData);
+        //    if (customAttributes.Any())
+        //    {
+        //        data = data.Union(customAttributes).ToDictionary(d => d.Key, d => d.Value);
+        //    }
+
+        //    return data;
+        //}
+
+        public static Microsoft.Graph.User SdkToUpdateGuestUserInput(this UserData userData)
+        {
+            var user = new User()
             {
-                data = data.Union(customAttributes).ToDictionary(d => d.Key, d => d.Value);
-            }
+                DisplayName = userData.DisplayName,
+                GivenName = userData.GivenName,
+                Surname = userData.SurName
+            };
 
-            return data;
+            Dictionary<string, object> customAttribtes = GetCustomAttributes(userData);
+            user.AdditionalData = GetCustomAttributes(userData);
+
+            return user;
         }
 
         /// <summary>
