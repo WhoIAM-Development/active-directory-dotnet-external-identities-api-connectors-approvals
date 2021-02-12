@@ -1,0 +1,16 @@
+﻿@using CustomApproval.Web.Models 
+@model DetailsModel
+
+<select id="example-getting-started" name="SelectedGroups[]" multiple="multiple">
+    @foreach (GroupsModel group in Model.Groups)
+    {
+        <option value="@group.Id">@group.DisplayName</option>
+    }
+</select>
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#example-getting-started').multiselect();
+    });
+</script>

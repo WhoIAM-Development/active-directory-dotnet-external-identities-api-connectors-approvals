@@ -33,6 +33,16 @@ namespace CustomApproval.Web.Services
             return JsonConvert.DeserializeObject<InviteGuestUserOutputModel>(result);
         }
 
+        public async Task AddUserToGroup(string groupId, string userId)
+        {
+            await SendGraphRequest($"/groups/{groupId}/members/$ref", JsonConvert.SerializeObject(userId), HttpMethod.Post);
+        }
+
+        //public async Task<List<string>> GetAllGroups()
+        //{
+        //    await SendGraphRequest("/groups",)
+        //}
+
         public async Task UpdateUser(Dictionary<string, object> user, string id)
         {
             await SendGraphRequest($"/users/{id}", JsonConvert.SerializeObject(user), HttpMethod.Patch);

@@ -47,12 +47,24 @@ namespace CustomApproval.Web.Controllers
             ViewBag.Email = data.Email;
 
             var users = await userService.GetUsersByEmail(data.Email);
+            var groups = new List<GroupsModel>()
+            {
+                new GroupsModel()  {DisplayName = "Group1", Id = "abc" },
+                new GroupsModel()  {DisplayName = "Group2", Id = "def" },
+                new GroupsModel()  {DisplayName = "Group3", Id = "ghi" }
+            };
 
-            return View(users.ToUserModel());
+            var detailsModel = new DetailsModel()
+            {
+                Users = users.ToUserModel(),
+                Groups = groups
+            };
+
+            return View(detailsModel);
         }
 
         [HttpPost]
-        public async Task<ActionResult> ApproveRequest(string Id)
+        public async Task<ActionResult> ApproveRequest(string Id, string[] SelectedGroups)
         {
             var user = await userService.GetUsersById(Id);
 

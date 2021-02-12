@@ -6,6 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\lib\NewFolder\**" />
+    <Content Remove="wwwroot\lib\NewFolder\**" />
+    <EmbeddedResource Remove="wwwroot\lib\NewFolder\**" />
+    <None Remove="wwwroot\lib\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.3" />

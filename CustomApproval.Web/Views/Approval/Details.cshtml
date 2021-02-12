@@ -1,9 +1,9 @@
-﻿@model List<UserModel>
+﻿@model DetailsModel
 @{
     ViewData["Title"] = "Details";
 }
 
-@if (Model == null || !Model.Any())
+@if (Model == null || !Model.Users.Any())
 {
     <h3>Approval not found</h3>
 
@@ -18,33 +18,34 @@ else
 
     <div>
 
-        <table class="table table-borderless">
-            <thead>
-                <tr>
-                    <th scope="col">Identity Provider</th>
-                    <th scope="col">State</th>
-                    <th scope="col"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
+        <form class="form-horizontal" asp-controller="Approval" method="post">
+            <table class="table table-borderless">
+                <thead>
                     <tr>
-                        <td>@item.IdentityProvider</td>
-                        <td>@item.StatusWithTime</td>
-                        <td>
-                            <form class="form-horizontal" asp-controller="Approval" method="post">                                
-                                @*@Html.Hidden("Identities", item.Identities)*@
-                                @Html.Hidden("Id", item.Id)
-                                <button type="submit" class="btn btn-success" formaction="ApproveRequest">Approve</button>
-                                <button type="submit" class="btn btn-danger" formaction="DenyRequest">Deny</button>
-                            </form>
-                        </td>
+                        <th scope="col">Identity Provider</th>
+                        <th scope="col">State</th>
+                        <th scope="col">Groups</th>
+                        <th scope="col"></th>
                     </tr>
-                }
-
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Users)
+                    {
+                        <tr>
+                            <td>@item.IdentityProvider</td>
+                            <td>@item.StatusWithTime</td>
+                            <td>@{ await Html.RenderPartialAsync("_GroupsDropdown.cshtml"); }</td>
+                            <td>
+                                    @*@Html.Hidden("Identities", item.Identities)*@
+                                    @Html.Hidden("Id", item.Id)
+                                    <button type="submit" class="btn btn-success" formaction="ApproveRequest">Approve</button>
+                                    <button type="submit" class="btn btn-danger" formaction="DenyRequest">Deny</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </form>
 
     </div>
 }
