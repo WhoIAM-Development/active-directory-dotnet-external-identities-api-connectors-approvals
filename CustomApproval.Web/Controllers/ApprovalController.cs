@@ -18,12 +18,12 @@ namespace CustomApproval.Web.Controllers
     {
 
         private readonly IUserService userService;
-        private readonly IGraphClientService graphClientService;
+        private readonly IGraphService graphClientService;
         private readonly IMailService mailService;
         private readonly GraphSettings graphSettings;
         private readonly AppSettings appSettings;
 
-        public ApprovalController(IConfiguration config, IUserService userService, IGraphClientService graphClientService, IMailService mailService)
+        public ApprovalController(IConfiguration config, IUserService userService, IGraphService graphClientService, IMailService mailService)
         {
             this.userService = userService;
             this.graphClientService = graphClientService;

@@ -65,7 +65,7 @@ namespace CustomApproval.Web
         private void ConfigureLocalServices(IServiceCollection services)
         {
             services.AddTransient<IUserService, UserService>();
-            services.AddTransient<IGraphClientService, GraphClientService>();
+            services.AddTransient<IGraphService, LegacyGraphClientService>();
             services.AddTransient<IMailService, MailService>();
         }
 

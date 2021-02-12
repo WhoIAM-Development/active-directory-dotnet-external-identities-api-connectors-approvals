@@ -13,10 +13,10 @@ using System.Threading.Tasks;
 
 namespace CustomApproval.Web.Services
 {
-    public class GraphClientService : IGraphClientService
+    public class LegacyGraphClientService : IGraphService
     {
         private readonly GraphSettings graphSettings;
-        public GraphClientService(IConfiguration config)
+        public LegacyGraphClientService(IConfiguration config)
         {
             graphSettings = config.GetSection("GraphApi")
               .Get<GraphSettings>();

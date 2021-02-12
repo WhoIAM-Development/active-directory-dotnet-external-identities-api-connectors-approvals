@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CustomApproval.Web.Services
 {
-    public interface IGraphClientService
+    public interface IGraphService
     {
         Task CreateUser(Dictionary<string, object> user);
 
