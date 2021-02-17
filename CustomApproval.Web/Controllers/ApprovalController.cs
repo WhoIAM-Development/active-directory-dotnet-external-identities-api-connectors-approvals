@@ -18,7 +18,7 @@ namespace CustomApproval.Web.Controllers
     {
 
         private readonly IUserService userService;
-        private readonly IGraphSdkClientService newGraphService;
+        private readonly IGraphSdkClientService graphService;
         private readonly IMailService mailService;
         private readonly GraphSettings graphSettings;
         private readonly AppSettings appSettings;
@@ -26,11 +26,11 @@ namespace CustomApproval.Web.Controllers
         public ApprovalController(
             IConfiguration config,
             IUserService userService,
-            IGraphSdkClientService newGraphService,
+            IGraphSdkClientService graphService,
             IMailService mailService)
         {
             this.userService = userService;
-            this.newGraphService = newGraphService;
+            this.graphService = graphService;
             this.mailService = mailService;
 
             graphSettings = config.GetSection("GraphApi")
@@ -52,7 +52,7 @@ namespace CustomApproval.Web.Controllers
             ViewBag.Email = data.Email;
 
             var users = await userService.GetUsersByEmail(data.Email);
-            var groups = await this.newGraphService.GetGroups();
+            var groups = await this.graphService.GetGroups();
 
             var detailsModel = new DetailsModel()
             {
@@ -64,10 +64,9 @@ namespace CustomApproval.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> ApproveRequest(string Id, string[] SelectedGroups)
+        public async Task<ActionResult> ApproveRequest(string internalUserId, string[] SelectedGroups)
         {
-            var user = await userService.GetUsersById(Id);
-
+            var user = await userService.GetUsersById(internalUserId);
             ViewBag.Message = "An error occurred while updating the request.";
 
             if (user == null)
@@ -75,29 +74,30 @@ namespace CustomApproval.Web.Controllers
                 return View("Index");
             }
 
+            string graphUserId;
             if (user.IsSocialUser())
             {
                 var createUserObj = user.SdkToSocialUserInput(graphSettings.Tenant);
-                var createdUser = await newGraphService.CreateUser(createUserObj);
-                await newGraphService.AddUserToGroups(createdUser.Id, SelectedGroups);
+                var createdUser = await graphService.CreateUser(createUserObj);
+                graphUserId = createdUser.Id;
 
                 await mailService.SendApprovalNotification(user.Email, user.Locale);
             }
-            else 
+            else
             {
-                var result = await newGraphService.InviteGuestUser(user.Email);
-
+                var result = await graphService.InviteGuestUser(user.Email);
                 if (result == null || string.IsNullOrEmpty(result.invitedUser?.id))
                 {
                     return View("Index");
                 }
 
+                graphUserId = result.invitedUser.id;
                 var updateUserObj = user.SdkToUpdateGuestUserInput();
-                await newGraphService.UpdateUser(result.invitedUser.id, updateUserObj);
-                await newGraphService.AddUserToGroups(result.invitedUser.id, SelectedGroups);
+                await graphService.UpdateUser(graphUserId, updateUserObj);
             }
 
-            await userService.RemoveUsersById(Id);
+            await graphService.AddUserToGroups(graphUserId, SelectedGroups);
+            await userService.RemoveUsersById(internalUserId);
 
             ViewBag.Message = "Update was successful.";
             return View("Index");
